@@ -80,6 +80,14 @@ setup(
     author_email=AUTHOR_EMAIL,
     license=LICENSE,
     packages=find_packages(exclude="notebooks"),
+    package_data={
+        "sam2": [
+            "*.yaml",
+            "configs/**/*.yaml",
+            "modeling/**/*.py",
+            "utils/**/*.py",
+        ],
+    },
     include_package_data=True,
     install_requires=REQUIRED_PACKAGES,
     extras_require=EXTRA_PACKAGES,
