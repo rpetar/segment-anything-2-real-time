@@ -4,6 +4,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 
+import torch
 from setuptools import find_packages, setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
@@ -38,18 +39,33 @@ EXTRA_PACKAGES = {
 
 
 def get_extensions():
-    srcs = ["sam2/csrc/connected_components.cu"]
-    compile_args = {
-        "cxx": [],
-        "nvcc": [
-            "-DCUDA_HAS_FP16=1",
-            "-D__CUDA_NO_HALF_OPERATORS__",
-            "-D__CUDA_NO_HALF_CONVERSIONS__",
-            "-D__CUDA_NO_HALF2_OPERATORS__",
-        ],
-    }
-    ext_modules = [CUDAExtension("sam2._C", srcs, extra_compile_args=compile_args)]
-    return ext_modules
+    """
+    Build CUDA extensions if CUDA is available, otherwise return empty list
+    to allow CPU-only installation.
+    """
+    # Check if CUDA is available
+    if not torch.cuda.is_available():
+        print("CUDA not available. Installing without CUDA extensions (CPU-only mode).")
+        return []
+    
+    try:
+        srcs = ["sam2/csrc/connected_components.cu"]
+        compile_args = {
+            "cxx": [],
+            "nvcc": [
+                "-DCUDA_HAS_FP16=1",
+                "-D__CUDA_NO_HALF_OPERATORS__",
+                "-D__CUDA_NO_HALF_CONVERSIONS__",
+                "-D__CUDA_NO_HALF2_OPERATORS__",
+            ],
+        }
+        ext_modules = [CUDAExtension("sam2._C", srcs, extra_compile_args=compile_args)]
+        print("CUDA detected. Building with CUDA extensions for GPU acceleration.")
+        return ext_modules
+    except Exception as e:
+        print(f"Warning: Failed to build CUDA extensions: {e}")
+        print("Proceeding with CPU-only installation.")
+        return []
 
 
 # Setup configuration
